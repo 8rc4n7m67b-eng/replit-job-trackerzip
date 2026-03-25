@@ -8,13 +8,32 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const CONFIG_PATH = path.join(__dirname, 'data', 'config.json');
 
+const DEFAULT_COMPANIES = [
+  { name: "Lyra Health", domain: "lyrahealth.com", careersUrl: "https://www.lyrahealth.com/company/careers/", group: "original", selected: true, defaultSelected: true },
+  { name: "Headspace", domain: "headspace.com", careersUrl: "https://www.headspace.com/careers", group: "original", selected: true, defaultSelected: true },
+  { name: "Talkspace", domain: "talkspace.com", careersUrl: "https://www.talkspace.com/careers", group: "original", selected: true, defaultSelected: true },
+  { name: "Spring Health", domain: "springhealth.com", careersUrl: "https://www.springhealth.com/careers", group: "original", selected: true, defaultSelected: true },
+  { name: "Alma", domain: "helloalma.com", careersUrl: "https://www.helloalma.com/careers/", group: "original", selected: true, defaultSelected: true },
+  { name: "Grow Therapy", domain: "growtherapy.com", careersUrl: "https://growtherapy.com/careers", group: "original", selected: true, defaultSelected: true },
+  { name: "Brightline", domain: "brightlinehealth.com", careersUrl: "https://www.brightlinehealth.com/careers", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Equip Health", domain: "equip.health", careersUrl: "https://equip.health/careers", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Charlie Health", domain: "charliehealth.com", careersUrl: "https://www.charliehealth.com/careers", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Quartet Health", domain: "quartethealth.com", careersUrl: "https://www.quartethealth.com/careers", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Rula Health", domain: "rula.com", careersUrl: "https://www.rula.com/careers", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Monument", domain: "joinmonument.com", careersUrl: "https://www.joinmonument.com/careers", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Done Health", domain: "donefirst.com", careersUrl: "https://donefirst.com/careers", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Osmind", domain: "osmind.org", careersUrl: "https://www.osmind.org/careers", group: "ehr", selected: true, defaultSelected: true },
+  { name: "Valant", domain: "valant.io", careersUrl: "https://www.valant.io/careers", group: "ehr", selected: true, defaultSelected: true },
+  { name: "Blueprint (Therapy Brands)", domain: "therapybrands.com", careersUrl: "https://therapybrands.com/careers", group: "ehr", selected: true, defaultSelected: true },
+];
+
 app.get('/api/config', (req, res) => {
   try {
     const data = fs.readFileSync(CONFIG_PATH, 'utf8');
     const parsed = JSON.parse(data);
-    if (Array.isArray(parsed) && parsed.length) return res.json(parsed);
+    if (Array.isArray(parsed)) return res.json(parsed);
   } catch (e) {}
-  res.status(404).json({ error: 'No saved config' });
+  res.json(DEFAULT_COMPANIES);
 });
 
 app.post('/api/config', (req, res) => {

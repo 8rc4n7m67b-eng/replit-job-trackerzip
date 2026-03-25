@@ -163,7 +163,7 @@ async function loadCompanies() {
     const resp = await fetch('/api/config');
     if (resp.ok) {
       const data = await resp.json();
-      if (Array.isArray(data) && data.length) return data;
+      if (Array.isArray(data)) return data;
     }
   } catch (e) {}
   return COMPANY_DATA.map(c => ({ ...c, selected: true, defaultSelected: true }));
