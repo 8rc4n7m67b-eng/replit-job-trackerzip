@@ -4,7 +4,9 @@ const fs = require('fs');
 
 const app = express();
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { etag: false, lastModified: false, setHeaders: (res, filePath) => {
+  if (filePath.endsWith('.html')) res.set('Cache-Control', 'no-store');
+} }));
 
 const CONFIG_PATH = path.join(__dirname, 'data', 'config.json');
 
