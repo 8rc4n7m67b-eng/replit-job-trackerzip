@@ -335,8 +335,9 @@ function renderResults(allResults) {
   const sorted = [...allResults].sort((a,b) => b.jobs.length - a.jobs.length);
   container.innerHTML = sorted.map(r => {
     if (r.error) return `<div class="company-section"><h3>${r.company} <span class="count-badge">error</span></h3><div class="error-msg">${r.error}</div></div>`;
-    if (!r.jobs || !r.jobs.length) return '';
-    const jobsHtml = r.jobs.map(job => `
+    const jobs = (r.jobs || []).filter(job => job.days_ago === null || job.days_ago === undefined || parseInt(job.days_ago) <= 21);
+    if (!jobs.length) return '';
+    const jobsHtml = jobs.map(job => `
       <div class="job-card">
         <div class="job-title">${job.url ? `<a href="${job.url}" target="_blank">${job.title}</a>` : job.title}</div>
         <div class="job-meta">
@@ -348,7 +349,7 @@ function renderResults(allResults) {
         ${job.snippet ? `<div class="job-snippet">${job.snippet}</div>` : ''}
       </div>`).join('');
     return `<div class="company-section">
-      <h3>${r.company} <span class="count-badge">${r.jobs.length} match${r.jobs.length !== 1 ? 'es' : ''}</span></h3>
+      <h3>${r.company} <span class="count-badge">${jobs.length} match${jobs.length !== 1 ? 'es' : ''}</span></h3>
       ${jobsHtml}
     </div>`;
   }).join('');
