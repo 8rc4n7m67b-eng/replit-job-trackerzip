@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Behavioral Health Job Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f9f9f7; color: #1a1a1a; min-height: 100vh; padding: 2rem 1rem; }
@@ -148,7 +149,24 @@ const COMPANY_DATA = [
 ];
 
 const GROUP_LABELS = { original: "Original targets", platforms: "Mental health platforms", ehr: "EHR / practice management" };
-let companies = COMPANY_DATA.map(c => ({ ...c, selected: true, defaultSelected: true }));
+const STORAGE_KEY = 'bh_job_tracker_companies';
+
+function saveCompanies() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(companies));
+}
+
+function loadCompanies() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length) return parsed;
+    }
+  } catch (e) {}
+  return COMPANY_DATA.map(c => ({ ...c, selected: true, defaultSelected: true }));
+}
+
+let companies = loadCompanies();
 
 function renderChips() {
   ['original','platforms','ehr'].forEach(group => {
@@ -164,7 +182,7 @@ function renderChips() {
 }
 
 function toggleCompany(i) { companies[i].selected = !companies[i].selected; renderChips(); }
-function removeCompany(i) { companies.splice(i, 1); renderChips(); }
+function removeCompany(i) { companies.splice(i, 1); saveCompanies(); renderChips(); }
 
 function addCompany() {
   const input = document.getElementById('newCompany');
@@ -173,6 +191,7 @@ function addCompany() {
   const domain = name.toLowerCase().replace(/\s+/g,'') + '.com';
   companies.push({ name, domain, careersUrl: `https://www.${domain}/careers`, group: 'original', selected: true, defaultSelected: true });
   input.value = '';
+  saveCompanies();
   renderChips();
 }
 
@@ -213,6 +232,7 @@ function saveDefaults() {
     const chk = document.getElementById('chk-' + i);
     if (chk) { c.defaultSelected = chk.checked; c.selected = chk.checked; }
   });
+  saveCompanies();
   closeSettings();
   renderChips();
 }
