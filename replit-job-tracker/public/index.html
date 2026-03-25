@@ -149,24 +149,27 @@ const COMPANY_DATA = [
 ];
 
 const GROUP_LABELS = { original: "Original targets", platforms: "Mental health platforms", ehr: "EHR / practice management" };
-const STORAGE_KEY = 'bh_job_tracker_companies';
 
 function saveCompanies() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(companies));
+  fetch('/api/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(companies)
+  }).catch(() => {});
 }
 
-function loadCompanies() {
+async function loadCompanies() {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (Array.isArray(parsed) && parsed.length) return parsed;
+    const resp = await fetch('/api/config');
+    if (resp.ok) {
+      const data = await resp.json();
+      if (Array.isArray(data) && data.length) return data;
     }
   } catch (e) {}
   return COMPANY_DATA.map(c => ({ ...c, selected: true, defaultSelected: true }));
 }
 
-let companies = loadCompanies();
+let companies = [];
 
 function renderChips() {
   ['original','platforms','ehr'].forEach(group => {
@@ -357,7 +360,11 @@ function renderResults(allResults) {
 
 function setStatus(html) { document.getElementById('statusBar').innerHTML = html; }
 
-renderChips();
+async function init() {
+  companies = await loadCompanies();
+  renderChips();
+}
+init();
 </script>
 </body>
 </html>

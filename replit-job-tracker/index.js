@@ -1,9 +1,34 @@
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+const CONFIG_PATH = path.join(__dirname, 'data', 'config.json');
+
+app.get('/api/config', (req, res) => {
+  try {
+    const data = fs.readFileSync(CONFIG_PATH, 'utf8');
+    const parsed = JSON.parse(data);
+    if (Array.isArray(parsed) && parsed.length) return res.json(parsed);
+  } catch (e) {}
+  res.status(404).json({ error: 'No saved config' });
+});
+
+app.post('/api/config', (req, res) => {
+  const companies = req.body;
+  if (!Array.isArray(companies)) return res.status(400).json({ error: 'Expected array' });
+  try {
+    const dir = path.dirname(CONFIG_PATH);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(CONFIG_PATH, JSON.stringify(companies, null, 2));
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.post('/api/search', async (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
