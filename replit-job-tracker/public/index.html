@@ -249,6 +249,21 @@ function daysAgoBadge(daysAgo) {
   return `<span class="badge badge-gray">${d}d ago</span>`;
 }
 
+async function searchWithRetry(company, keywords, location, retries = 2) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await searchCompany(company, keywords, location);
+    } catch (err) {
+      const isRateLimit = err.message.includes('429') || err.message.includes('529') || err.message.toLowerCase().includes('rate') || err.message.toLowerCase().includes('overload');
+      if (attempt < retries && isRateLimit) {
+        await new Promise(r => setTimeout(r, 3000 * (attempt + 1)));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 async function runSearch() {
   const selected = companies.filter(c => c.selected);
   if (!selected.length) { setStatus('Select at least one company.'); return; }
@@ -263,19 +278,24 @@ async function runSearch() {
 
   const allResults = [];
   let completed = 0;
+  const BATCH_SIZE = 3;
   setStatus('<span class="spinner"></span> Searching ' + selected.length + ' companies...');
 
-  await Promise.all(selected.map(async company => {
-    try {
-      const jobs = await searchCompany(company, keywords, location);
-      allResults.push({ company: company.name, jobs, error: null });
-    } catch (err) {
-      allResults.push({ company: company.name, jobs: [], error: err.message });
-    }
-    completed++;
-    setStatus('<span class="spinner"></span> ' + completed + ' / ' + selected.length + ' companies searched...');
-    renderResults(allResults);
-  }));
+  for (let i = 0; i < selected.length; i += BATCH_SIZE) {
+    const batch = selected.slice(i, i + BATCH_SIZE);
+    await Promise.all(batch.map(async company => {
+      try {
+        const jobs = await searchWithRetry(company, keywords, location);
+        allResults.push({ company: company.name, jobs, error: null });
+      } catch (err) {
+        allResults.push({ company: company.name, jobs: [], error: err.message });
+      }
+      completed++;
+      setStatus('<span class="spinner"></span> ' + completed + ' / ' + selected.length + ' companies searched...');
+      renderResults(allResults);
+    }));
+    if (i + BATCH_SIZE < selected.length) await new Promise(r => setTimeout(r, 1000));
+  }
 
   const total = allResults.reduce((s, r) => s + r.jobs.length, 0);
   setStatus('Done. Found ' + total + ' matching job' + (total !== 1 ? 's' : '') + ' across ' + selected.length + ' companies.');
