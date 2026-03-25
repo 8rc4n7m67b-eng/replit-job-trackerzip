@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Behavioral Health Job Tracker</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f9f9f7; color: #1a1a1a; min-height: 100vh; padding: 2rem 1rem; }
+  .app { max-width: 880px; margin: 0 auto; }
+  .header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2rem; }
+  .header h1 { font-size: 24px; font-weight: 500; }
+  .header p { font-size: 14px; color: #666; margin-top: 4px; }
+  .settings-btn { font-size: 13px; color: #555; background: #fff; border: 0.5px solid #ccc; border-radius: 8px; padding: 6px 14px; cursor: pointer; white-space: nowrap; }
+  .settings-btn:hover { background: #f3f3f1; }
+  .companies { margin-bottom: 1.5rem; }
+  .companies-header { font-size: 12px; color: #888; margin-bottom: 8px; }
+  .group-label { font-size: 11px; color: #aaa; letter-spacing: 0.04em; text-transform: uppercase; margin: 10px 0 6px; }
+  .company-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 5px 10px; border-radius: 8px; border: 0.5px solid #ccc; background: #fff; color: #1a1a1a; cursor: pointer; transition: background 0.15s; user-select: none; }
+  .chip:hover { background: #f3f3f1; }
+  .chip.selected { background: #e8f0fe; border-color: #93b4f5; color: #1a56db; }
+  .chip .remove { font-size: 16px; line-height: 1; opacity: 0.5; }
+  .chip.selected .remove { opacity: 0.7; }
+  .add-company { display: flex; gap: 8px; margin-top: 12px; }
+  .controls { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; margin-bottom: 1.5rem; align-items: end; }
+  .field label { display: block; font-size: 12px; color: #666; margin-bottom: 5px; }
+  .field .hint { font-size: 11px; color: #aaa; margin-top: 4px; }
+  input[type=text] { width: 100%; font-size: 14px; padding: 7px 10px; border: 0.5px solid #ccc; border-radius: 8px; background: #fff; color: #1a1a1a; outline: none; }
+  input[type=text]:focus { border-color: #93b4f5; box-shadow: 0 0 0 3px rgba(147,180,245,0.2); }
+  .run-btn { padding: 8px 22px; background: #1a1a1a; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap; }
+  .run-btn:hover { background: #333; }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .status-bar { font-size: 13px; color: #888; margin-bottom: 1rem; min-height: 20px; display: flex; align-items: center; gap: 8px; }
+  .company-section { margin-bottom: 1.75rem; }
+  .company-section h3 { font-size: 15px; font-weight: 500; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 0.5px solid #e5e5e3; display: flex; align-items: center; gap: 8px; }
+  .count-badge { font-size: 12px; font-weight: 400; color: #888; background: #f3f3f1; padding: 2px 8px; border-radius: 20px; }
+  .job-card { background: #fff; border: 0.5px solid #e5e5e3; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 8px; }
+  .job-card:hover { border-color: #ccc; }
+  .job-title { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+  .job-title a { color: inherit; text-decoration: none; }
+  .job-title a:hover { color: #1a56db; }
+  .job-meta { display: flex; gap: 8px; flex-wrap: wrap; font-size: 12px; color: #888; align-items: center; }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+  .badge-blue { background: #e8f0fe; color: #1a56db; }
+  .badge-green { background: #e3f5e9; color: #1a7a3c; }
+  .badge-amber { background: #fef3e2; color: #92540a; }
+  .badge-gray { background: #f3f3f1; color: #666; }
+  .job-snippet { font-size: 13px; color: #666; margin-top: 8px; line-height: 1.55; }
+  .error-msg { font-size: 13px; color: #c0392b; background: #fdecea; border-radius: 8px; padding: 8px 12px; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border: 0.5px solid #ccc; border-radius: 12px; padding: 1.5rem; width: 100%; max-width: 520px; max-height: 80vh; overflow-y: auto; }
+  .modal h2 { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+  .modal .subtitle { font-size: 13px; color: #666; margin-bottom: 1.25rem; }
+  .section-label { font-size: 11px; color: #aaa; letter-spacing: 0.04em; text-transform: uppercase; margin: 1rem 0 4px; }
+  .select-all-row { display: flex; gap: 8px; margin-bottom: 4px; }
+  .select-all-row button { font-size: 12px; color: #1a56db; background: none; border: none; cursor: pointer; padding: 0; }
+  .select-all-row button:hover { text-decoration: underline; }
+  .check-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 0.5px solid #f0f0ee; }
+  .check-row:last-child { border-bottom: none; }
+  .check-row input[type=checkbox] { width: 15px; height: 15px; cursor: pointer; flex-shrink: 0; accent-color: #1a56db; }
+  .check-row label { font-size: 14px; cursor: pointer; flex: 1; }
+  .check-row .domain { font-size: 12px; color: #aaa; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.25rem; padding-top: 1rem; border-top: 0.5px solid #e5e5e3; }
+  .btn-secondary { font-size: 13px; padding: 7px 16px; border: 0.5px solid #ccc; border-radius: 8px; background: none; cursor: pointer; }
+  .btn-secondary:hover { background: #f3f3f1; }
+  .btn-primary { font-size: 13px; padding: 7px 16px; background: #1a1a1a; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
+  .btn-primary:hover { background: #333; }
+  .spinner { display: inline-block; width: 12px; height: 12px; border: 1.5px solid #ddd; border-top-color: #1a1a1a; border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (max-width: 600px) { .controls { grid-template-columns: 1fr; } .run-btn { width: 100%; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div>
+      <h1>Job tracker</h1>
+      <p>AI-powered search across behavioral health and mental health EHR companies.</p>
+    </div>
+    <button class="settings-btn" onclick="openSettings()">Edit defaults</button>
+  </div>
+
+  <div class="companies">
+    <div class="companies-header">Active companies — click to toggle for this search</div>
+    <div class="group-label">Original targets</div>
+    <div class="company-chips" id="chips-original"></div>
+    <div class="group-label">Mental health platforms</div>
+    <div class="company-chips" id="chips-platforms"></div>
+    <div class="group-label">EHR / practice management</div>
+    <div class="company-chips" id="chips-ehr"></div>
+    <div class="add-company" style="margin-top:12px;">
+      <input type="text" id="newCompany" placeholder="Add a company..." style="max-width:220px;" />
+      <button class="chip" onclick="addCompany()" style="border-style:dashed;">+ Add</button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="field">
+      <label>Keywords — any match (OR)</label>
+      <input type="text" id="keywords" value="Product, Strategy" />
+      <div class="hint">Comma-separated. A job matching any keyword will be returned.</div>
+    </div>
+    <div class="field">
+      <label>Location filter (optional)</label>
+      <input type="text" id="location" placeholder="e.g. Remote, Chicago" />
+    </div>
+    <button class="run-btn" id="runBtn" onclick="runSearch()">Search jobs</button>
+  </div>
+
+  <div>
+    <div class="status-bar" id="statusBar"></div>
+    <div id="resultsContainer"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <h2>Edit default selections</h2>
+    <p class="subtitle">Check the companies that should be selected by default when you open the tracker.</p>
+    <div id="checklistContent"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeSettings()">Cancel</button>
+      <button class="btn-primary" onclick="saveDefaults()">Save defaults</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const COMPANY_DATA = [
+  { name: "Lyra Health", domain: "lyrahealth.com", careersUrl: "https://www.lyrahealth.com/company/careers/", group: "original" },
+  { name: "Headspace", domain: "headspace.com", careersUrl: "https://www.headspace.com/careers", group: "original" },
+  { name: "Talkspace", domain: "talkspace.com", careersUrl: "https://www.talkspace.com/careers", group: "original" },
+  { name: "Spring Health", domain: "springhealth.com", careersUrl: "https://www.springhealth.com/careers", group: "original" },
+  { name: "Alma", domain: "helloalma.com", careersUrl: "https://www.helloalma.com/careers/", group: "original" },
+  { name: "Grow Therapy", domain: "growtherapy.com", careersUrl: "https://growtherapy.com/careers", group: "original" },
+  { name: "Brightline", domain: "brightlinehealth.com", careersUrl: "https://www.brightlinehealth.com/careers", group: "platforms" },
+  { name: "Equip Health", domain: "equip.health", careersUrl: "https://equip.health/careers", group: "platforms" },
+  { name: "Charlie Health", domain: "charliehealth.com", careersUrl: "https://www.charliehealth.com/careers", group: "platforms" },
+  { name: "Quartet Health", domain: "quartethealth.com", careersUrl: "https://www.quartethealth.com/careers", group: "platforms" },
+  { name: "Rula Health", domain: "rula.com", careersUrl: "https://www.rula.com/careers", group: "platforms" },
+  { name: "Monument", domain: "joinmonument.com", careersUrl: "https://www.joinmonument.com/careers", group: "platforms" },
+  { name: "Done Health", domain: "donefirst.com", careersUrl: "https://donefirst.com/careers", group: "platforms" },
+  { name: "Osmind", domain: "osmind.org", careersUrl: "https://www.osmind.org/careers", group: "ehr" },
+  { name: "Valant", domain: "valant.io", careersUrl: "https://www.valant.io/careers", group: "ehr" },
+  { name: "Blueprint (Therapy Brands)", domain: "therapybrands.com", careersUrl: "https://therapybrands.com/careers", group: "ehr" },
+];
+
+const GROUP_LABELS = { original: "Original targets", platforms: "Mental health platforms", ehr: "EHR / practice management" };
+let companies = COMPANY_DATA.map(c => ({ ...c, selected: true, defaultSelected: true }));
+
+function renderChips() {
+  ['original','platforms','ehr'].forEach(group => {
+    const el = document.getElementById('chips-' + group);
+    el.innerHTML = companies.filter(c => c.group === group).map(c => {
+      const i = companies.indexOf(c);
+      return `<div class="chip ${c.selected ? 'selected' : ''}" onclick="toggleCompany(${i})">
+        ${c.name}
+        <span class="remove" onclick="event.stopPropagation(); removeCompany(${i})">×</span>
+      </div>`;
+    }).join('');
+  });
+}
+
+function toggleCompany(i) { companies[i].selected = !companies[i].selected; renderChips(); }
+function removeCompany(i) { companies.splice(i, 1); renderChips(); }
+
+function addCompany() {
+  const input = document.getElementById('newCompany');
+  const name = input.value.trim();
+  if (!name) return;
+  const domain = name.toLowerCase().replace(/\s+/g,'') + '.com';
+  companies.push({ name, domain, careersUrl: `https://www.${domain}/careers`, group: 'original', selected: true, defaultSelected: true });
+  input.value = '';
+  renderChips();
+}
+
+document.getElementById('newCompany').addEventListener('keydown', e => { if (e.key === 'Enter') addCompany(); });
+
+function openSettings() {
+  const content = document.getElementById('checklistContent');
+  content.innerHTML = ['original','platforms','ehr'].map(group => {
+    const rows = companies.filter(c => c.group === group).map(c => {
+      const i = companies.indexOf(c);
+      return `<div class="check-row">
+        <input type="checkbox" id="chk-${i}" ${c.defaultSelected ? 'checked' : ''} />
+        <label for="chk-${i}">${c.name}</label>
+        <span class="domain">${c.domain}</span>
+      </div>`;
+    }).join('');
+    return `<div class="section-label">${GROUP_LABELS[group]}</div>
+      <div class="select-all-row">
+        <button onclick="setGroupAll('${group}', true)">Select all</button>
+        <button onclick="setGroupAll('${group}', false)">Deselect all</button>
+      </div>${rows}`;
+  }).join('');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function setGroupAll(group, val) {
+  companies.filter(c => c.group === group).forEach(c => {
+    const chk = document.getElementById('chk-' + companies.indexOf(c));
+    if (chk) chk.checked = val;
+  });
+}
+
+function closeSettings() { document.getElementById('modalOverlay').classList.remove('open'); }
+function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeSettings(); }
+
+function saveDefaults() {
+  companies.forEach((c, i) => {
+    const chk = document.getElementById('chk-' + i);
+    if (chk) { c.defaultSelected = chk.checked; c.selected = chk.checked; }
+  });
+  closeSettings();
+  renderChips();
+}
+
+function daysAgoBadge(daysAgo) {
+  if (daysAgo === null || daysAgo === undefined) return '';
+  const d = parseInt(daysAgo);
+  if (isNaN(d)) return `<span class="badge badge-gray">${daysAgo}</span>`;
+  if (d <= 7) return `<span class="badge badge-green">${d}d ago</span>`;
+  if (d <= 21) return `<span class="badge badge-amber">${d}d ago</span>`;
+  return `<span class="badge badge-gray">${d}d ago</span>`;
+}
+
+async function runSearch() {
+  const selected = companies.filter(c => c.selected);
+  if (!selected.length) { setStatus('Select at least one company.'); return; }
+  const keywords = document.getElementById('keywords').value.trim();
+  const location = document.getElementById('location').value.trim();
+  if (!keywords) { setStatus('Enter at least one keyword.'); return; }
+
+  const btn = document.getElementById('runBtn');
+  btn.disabled = true;
+  btn.textContent = 'Searching...';
+  document.getElementById('resultsContainer').innerHTML = '';
+
+  const allResults = [];
+  let completed = 0;
+  setStatus('<span class="spinner"></span> Searching ' + selected.length + ' companies...');
+
+  await Promise.all(selected.map(async company => {
+    try {
+      const jobs = await searchCompany(company, keywords, location);
+      allResults.push({ company: company.name, jobs, error: null });
+    } catch (err) {
+      allResults.push({ company: company.name, jobs: [], error: err.message });
+    }
+    completed++;
+    setStatus('<span class="spinner"></span> ' + completed + ' / ' + selected.length + ' companies searched...');
+    renderResults(allResults);
+  }));
+
+  const total = allResults.reduce((s, r) => s + r.jobs.length, 0);
+  setStatus('Done. Found ' + total + ' matching job' + (total !== 1 ? 's' : '') + ' across ' + selected.length + ' companies.');
+  btn.disabled = false;
+  btn.textContent = 'Search jobs';
+}
+
+async function searchCompany(company, keywords, location) {
+  const kwList = keywords.split(',').map(k => k.trim()).filter(Boolean);
+  const locationClause = location ? ` The user prefers roles in or near "${location}" or remote.` : '';
+
+  const prompt = `You are a job search assistant. Find current open job listings at ${company.name}.
+
+Careers page: ${company.careersUrl}
+Domain: ${company.domain}
+
+Use web_search to find open roles matching ANY of these keywords (OR logic): ${kwList.map(k => `"${k}"`).join(', ')}.${locationClause}
+
+For each job, try to determine how many days ago it was posted. Use the posting date from the listing if available. If not available, return null for days_ago.
+
+Return ONLY a JSON array. No preamble, no markdown, no backticks. Each element:
+{
+  "title": "Job title",
+  "location": "Location or Remote",
+  "url": "Direct URL to the job listing, or careers page if no direct link available",
+  "snippet": "1-2 sentence description of the role",
+  "matched_keyword": "which keyword matched",
+  "days_ago": 5
+}
+
+days_ago must be an integer (number of days since posted) or null if unknown. Maximum 8 results. Return [] if none found.`;
+
+  const resp = await fetch('/api/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!resp.ok) throw new Error('API error ' + resp.status);
+  const data = await resp.json();
+
+  let text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+  text = text.trim().replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```\s*$/i,'').trim();
+
+  try { const p = JSON.parse(text); return Array.isArray(p) ? p : []; }
+  catch {
+    const m = text.match(/\[[\s\S]*\]/);
+    if (m) { try { return JSON.parse(m[0]); } catch { return []; } }
+    return [];
+  }
+}
+
+function renderResults(allResults) {
+  const container = document.getElementById('resultsContainer');
+  const sorted = [...allResults].sort((a,b) => b.jobs.length - a.jobs.length);
+  container.innerHTML = sorted.map(r => {
+    if (r.error) return `<div class="company-section"><h3>${r.company} <span class="count-badge">error</span></h3><div class="error-msg">${r.error}</div></div>`;
+    if (!r.jobs || !r.jobs.length) return '';
+    const jobsHtml = r.jobs.map(job => `
+      <div class="job-card">
+        <div class="job-title">${job.url ? `<a href="${job.url}" target="_blank">${job.title}</a>` : job.title}</div>
+        <div class="job-meta">
+          ${job.location ? `<span>${job.location}</span>` : ''}
+          <span class="badge badge-blue">${r.company}</span>
+          ${daysAgoBadge(job.days_ago)}
+          ${job.matched_keyword ? `<span style="font-size:11px;color:#aaa;">matched: ${job.matched_keyword}</span>` : ''}
+        </div>
+        ${job.snippet ? `<div class="job-snippet">${job.snippet}</div>` : ''}
+      </div>`).join('');
+    return `<div class="company-section">
+      <h3>${r.company} <span class="count-badge">${r.jobs.length} match${r.jobs.length !== 1 ? 'es' : ''}</span></h3>
+      ${jobsHtml}
+    </div>`;
+  }).join('');
+}
+
+function setStatus(html) { document.getElementById('statusBar').innerHTML = html; }
+
+renderChips();
+</script>
+</body>
+</html>
