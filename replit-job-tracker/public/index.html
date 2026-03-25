@@ -319,7 +319,15 @@ days_ago must be an integer (number of days since posted) or null if unknown. Ma
     })
   });
 
-  if (!resp.ok) throw new Error('API error ' + resp.status);
+  if (!resp.ok) {
+    let msg = 'API error ' + resp.status;
+    try {
+      const errData = await resp.json();
+      if (errData.error?.message) msg = errData.error.message;
+      else if (errData.error) msg = typeof errData.error === 'string' ? errData.error : JSON.stringify(errData.error);
+    } catch {}
+    throw new Error(msg);
+  }
   const data = await resp.json();
 
   let text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');

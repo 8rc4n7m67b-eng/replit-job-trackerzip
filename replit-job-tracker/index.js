@@ -52,6 +52,7 @@ app.post('/api/config', (req, res) => {
 app.post('/api/search', async (req, res) => {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
+    console.error('[search] ANTHROPIC_API_KEY is not set');
     return res.status(500).json({ error: 'ANTHROPIC_API_KEY environment variable not set.' });
   }
 
@@ -68,10 +69,12 @@ app.post('/api/search', async (req, res) => {
 
     const data = await response.json();
     if (!response.ok) {
+      console.error('[search] Anthropic API error', response.status, JSON.stringify(data));
       return res.status(response.status).json(data);
     }
     res.json(data);
   } catch (err) {
+    console.error('[search] Unexpected error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
