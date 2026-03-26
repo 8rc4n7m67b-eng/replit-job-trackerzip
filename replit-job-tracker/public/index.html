@@ -184,7 +184,7 @@ function renderChips() {
   });
 }
 
-function toggleCompany(i) { companies[i].selected = !companies[i].selected; renderChips(); }
+function toggleCompany(i) { companies[i].selected = !companies[i].selected; saveCompanies(); renderChips(); }
 function removeCompany(i) { companies.splice(i, 1); saveCompanies(); renderChips(); }
 
 function addCompany() {
@@ -206,7 +206,7 @@ function openSettings() {
     const rows = companies.filter(c => c.group === group).map(c => {
       const i = companies.indexOf(c);
       return `<div class="check-row">
-        <input type="checkbox" id="chk-${i}" ${c.defaultSelected ? 'checked' : ''} />
+        <input type="checkbox" id="chk-${i}" ${c.selected ? 'checked' : ''} />
         <label for="chk-${i}">${c.name}</label>
         <span class="domain">${c.domain}</span>
       </div>`;
@@ -329,8 +329,8 @@ days_ago must be an integer (number of days since posted) or null if unknown. Ma
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 4096,
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1024,
       tools: [{ type: 'web_search_20250305', name: 'web_search' }],
       messages: [{ role: 'user', content: prompt }]
     })
