@@ -11,22 +11,22 @@ app.use(express.static(path.join(__dirname, 'public'), { etag: false, lastModifi
 const CONFIG_PATH = path.join(__dirname, 'data', 'config.json');
 
 const DEFAULT_COMPANIES = [
-  { name: "Lyra Health", domain: "jobs.lever.co", careersUrl: "https://www.lyrahealth.com/company/careers/", group: "original", selected: true, defaultSelected: true },
-  { name: "Headspace", domain: "job-boards.greenhouse.io", careersUrl: "https://www.headspace.com/careers", group: "original", selected: true, defaultSelected: true },
-  { name: "Talkspace", domain: "job-boards.greenhouse.io", careersUrl: "https://www.talkspace.com/careers", group: "original", selected: true, defaultSelected: true },
-  { name: "Spring Health", domain: "job-boards.greenhouse.io", careersUrl: "https://www.springhealth.com/careers", group: "original", selected: true, defaultSelected: true },
-  { name: "Alma", domain: "job-boards.greenhouse.io", careersUrl: "https://www.helloalma.com/careers/", group: "original", selected: true, defaultSelected: true },
-  { name: "Grow Therapy", domain: "job-boards.greenhouse.io", careersUrl: "https://growtherapy.com/careers", group: "original", selected: true, defaultSelected: true },
-  { name: "Brightline", domain: "jobs.ashbyhq.com", careersUrl: "https://www.brightlinehealth.com/careers", group: "platforms", selected: true, defaultSelected: true },
-  { name: "Equip Health", domain: "jobs.ashbyhq.com", careersUrl: "https://equip.health/careers", group: "platforms", selected: true, defaultSelected: true },
-  { name: "Charlie Health", domain: "boards.greenhouse.io", careersUrl: "https://www.charliehealth.com/careers", group: "platforms", selected: true, defaultSelected: true },
-  { name: "Quartet Health", domain: "quartethealth.com", careersUrl: "https://www.quartethealth.com/careers", group: "platforms", selected: true, defaultSelected: true },
-  { name: "Rula Health", domain: "jobs.ashbyhq.com", careersUrl: "https://www.rula.com/careers", group: "platforms", selected: true, defaultSelected: true },
-  { name: "Monument", domain: "myworkdayjobs.com", careersUrl: "https://www.joinmonument.com/careers", group: "platforms", selected: true, defaultSelected: true },
-  { name: "Done Health", domain: "donefirst.com", careersUrl: "https://donefirst.com/careers", group: "platforms", selected: true, defaultSelected: true },
-  { name: "Osmind", domain: "jobs.lever.co", careersUrl: "https://www.osmind.org/careers", group: "ehr", selected: true, defaultSelected: true },
-  { name: "Valant", domain: "valant.io", careersUrl: "https://www.valant.io/careers", group: "ehr", selected: true, defaultSelected: true },
-  { name: "Blueprint (Therapy Brands)", domain: "careers.smartrecruiters.com", careersUrl: "https://therapybrands.com/careers", group: "ehr", selected: true, defaultSelected: true },
+  { name: "Lyra Health", domain: "jobs.lever.co", careersUrl: "https://jobs.lever.co/lyrahealth", group: "original", selected: true, defaultSelected: true },
+  { name: "Headspace", domain: "job-boards.greenhouse.io", careersUrl: "https://job-boards.greenhouse.io/hs", group: "original", selected: true, defaultSelected: true },
+  { name: "Talkspace", domain: "boards.greenhouse.io", careersUrl: "https://boards.greenhouse.io/talkspace", group: "original", selected: true, defaultSelected: true },
+  { name: "Spring Health", domain: "job-boards.greenhouse.io", careersUrl: "https://job-boards.greenhouse.io/springhealth66", group: "original", selected: true, defaultSelected: true },
+  { name: "Alma", domain: "job-boards.greenhouse.io", careersUrl: "https://job-boards.greenhouse.io/alma", group: "original", selected: true, defaultSelected: true },
+  { name: "Grow Therapy", domain: "job-boards.greenhouse.io", careersUrl: "https://job-boards.greenhouse.io/growtherapy", group: "original", selected: true, defaultSelected: true },
+  { name: "Brightline", domain: "jobs.ashbyhq.com", careersUrl: "https://jobs.ashbyhq.com/hellobrightline", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Equip Health", domain: "jobs.lever.co", careersUrl: "https://jobs.lever.co/equiphealth", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Charlie Health", domain: "boards.greenhouse.io", careersUrl: "https://boards.greenhouse.io/charliehealthinc", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Quartet Health", domain: "boards.greenhouse.io", careersUrl: "https://boards.greenhouse.io/quartethealth", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Rula Health", domain: "jobs.ashbyhq.com", careersUrl: "https://jobs.ashbyhq.com/rula", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Monument", domain: "myworkdayjobs.com", careersUrl: "https://monumenthealth.wd1.myworkdayjobs.com/Goldcareers", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Done Health", domain: "donefirst.com", careersUrl: "https://donefirst.com/faq/career-opportunities", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Osmind", domain: "jobs.lever.co", careersUrl: "https://jobs.lever.co/Osmind", group: "ehr", selected: true, defaultSelected: true },
+  { name: "Valant", domain: "valant.io", careersUrl: "https://www.valant.io/about-us/careers/", group: "ehr", selected: true, defaultSelected: true },
+  { name: "Ensora Health", domain: "myworkdayjobs.com", careersUrl: "https://ensorahealth.com/careers/", group: "ehr", selected: true, defaultSelected: true },
 ];
 
 app.get('/api/config', (req, res) => {
