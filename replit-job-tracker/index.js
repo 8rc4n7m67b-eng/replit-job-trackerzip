@@ -28,6 +28,15 @@ const DEFAULT_COMPANIES = [
   { name: "Osmind", domain: "jobs.lever.co", careersUrl: "https://jobs.lever.co/Osmind", group: "ehr", selected: true, defaultSelected: true },
   { name: "Valant", domain: "valant.io", careersUrl: "https://www.valant.io/about-us/careers/", group: "ehr", selected: true, defaultSelected: true },
   { name: "Ensora Health", domain: "myworkdayjobs.com", careersUrl: "https://ensorahealth.com/careers/", group: "ehr", selected: true, defaultSelected: true },
+  { name: "SonderMind", domain: "job-boards.greenhouse.io", careersUrl: "https://job-boards.greenhouse.io/sondermind", group: "original", selected: true, defaultSelected: true },
+  { name: "Two Chairs", domain: "boards.greenhouse.io", careersUrl: "https://boards.greenhouse.io/twochairs", group: "original", selected: true, defaultSelected: true },
+  { name: "Woebot Health", domain: "jobs.ashbyhq.com", careersUrl: "https://jobs.ashbyhq.com/woebot-health", group: "original", selected: true, defaultSelected: true },
+  { name: "Octave", domain: "boards.greenhouse.io", careersUrl: "https://boards.greenhouse.io/octave", group: "original", selected: true, defaultSelected: true },
+  { name: "NOCD", domain: "ats.rippling.com", careersUrl: "https://ats.rippling.com/nocd/jobs", group: "original", selected: true, defaultSelected: true },
+  { name: "Concert Health", domain: "ats.rippling.com", careersUrl: "https://ats.rippling.com/concerthealthcareers/jobs", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Array Behavioral Care", domain: "jobs.ashbyhq.com", careersUrl: "https://jobs.ashbyhq.com/array-behavioral-care", group: "platforms", selected: true, defaultSelected: true },
+  { name: "Talkiatry", domain: "jobs.lever.co", careersUrl: "https://jobs.lever.co/talkiatry", group: "platforms", selected: true, defaultSelected: true },
+  { name: "SimplePractice", domain: "job-boards.greenhouse.io", careersUrl: "https://job-boards.greenhouse.io/simplepractice55", group: "ehr", selected: true, defaultSelected: true },
 ];
 
 app.get('/api/config', (req, res) => {
