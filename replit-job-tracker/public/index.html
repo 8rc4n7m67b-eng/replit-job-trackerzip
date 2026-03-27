@@ -249,6 +249,35 @@ function daysAgoBadge(daysAgo) {
   return `<span class="badge badge-gray">${d}d ago</span>`;
 }
 
+function isGenericCareersUrl(url) {
+  if (!url) return false;
+  try {
+    const u = new URL(url);
+    const path = u.pathname.replace(/\/+$/, '');
+    return /^\/?(?:careers?|jobs?|work-with-us|join-us)?(?:\/(?:list|open-positions))?$/.test(path);
+  } catch { return false; }
+}
+
+async function validateJobs(jobs) {
+  if (!jobs || !jobs.length) return [];
+  const results = await Promise.all(jobs.map(async job => {
+    if (!job.url) return job;
+    try {
+      const resp = await fetch('/api/validate-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: job.url })
+      });
+      if (!resp.ok) return job;
+      const v = await resp.json();
+      if (v.status === 404) return null;
+      if (v.redirected && isGenericCareersUrl(v.finalUrl)) return null;
+      return job;
+    } catch { return job; }
+  }));
+  return results.filter(Boolean);
+}
+
 async function searchWithRetry(company, keywords, location, retries = 3) {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
@@ -284,7 +313,9 @@ async function runSearch() {
     const company = selected[i];
     setStatus('<span class="spinner"></span> ' + (completed + 1) + ' / ' + selected.length + ' — searching ' + company.name + '...');
     try {
-      const jobs = await searchWithRetry(company, keywords, location);
+      const rawJobs = await searchWithRetry(company, keywords, location);
+      setStatus('<span class="spinner"></span> ' + (completed + 1) + ' / ' + selected.length + ' — validating ' + rawJobs.length + ' listings for ' + company.name + '...');
+      const jobs = await validateJobs(rawJobs);
       allResults.push({ company: company.name, jobs, error: null });
     } catch (err) {
       allResults.push({ company: company.name, jobs: [], error: err.message });

@@ -91,5 +91,32 @@ app.post('/api/search', async (req, res) => {
   }
 });
 
+app.post('/api/validate-url', async (req, res) => {
+  const { url } = req.body;
+  if (!url || typeof url !== 'string' || !url.startsWith('https://')) {
+    return res.json({ ok: true, status: 0, redirected: false, finalUrl: url || '' });
+  }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      redirect: 'follow',
+      signal: controller.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; JobTracker/1.0)' }
+    });
+    clearTimeout(timer);
+    res.json({
+      ok: response.status < 400,
+      status: response.status,
+      redirected: response.redirected,
+      finalUrl: response.url
+    });
+  } catch (err) {
+    clearTimeout(timer);
+    res.json({ ok: true, status: 0, redirected: false, finalUrl: url });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Job tracker running on port ${PORT}`));
