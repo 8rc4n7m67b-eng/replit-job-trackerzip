@@ -291,7 +291,7 @@ async function runSearch() {
     }
     completed++;
     renderResults(allResults);
-    if (i < selected.length - 1) await new Promise(r => setTimeout(r, 3000));
+    if (i < selected.length - 1) await new Promise(r => setTimeout(r, 7000));
   }
 
   const total = allResults.reduce((s, r) => s + r.jobs.length, 0);
