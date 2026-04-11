@@ -1,15 +1,15 @@
 // Job tracker server
 const express = require('express');
-const path = require('path');
-const fs = require('fs');
+const Database = require('@replit/database');
 
 const app = express();
+const db = new Database();
+const DB_KEY = 'jobTrackerCompanies';
+
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public'), { etag: false, lastModified: false, setHeaders: (res, filePath) => {
+app.use(express.static(require('path').join(__dirname, 'public'), { etag: false, lastModified: false, setHeaders: (res, filePath) => {
   if (filePath.endsWith('.html')) res.set('Cache-Control', 'no-store');
 } }));
-
-const CONFIG_PATH = path.join(__dirname, 'data', 'config.json');
 
 const DEFAULT_COMPANIES = [
   { name: "Lyra Health", domain: "jobs.lever.co", companyDomain: "lyrahealth.com", careersUrl: "https://jobs.lever.co/lyrahealth", group: "original", selected: true, defaultSelected: true },
@@ -39,22 +39,19 @@ const DEFAULT_COMPANIES = [
   { name: "SimplePractice", domain: "boards.greenhouse.io", careersUrl: "https://boards.greenhouse.io/simplepractice55", group: "ehr", selected: true, defaultSelected: true },
 ];
 
-app.get('/api/config', (req, res) => {
+app.get('/api/config', async (req, res) => {
   try {
-    const data = fs.readFileSync(CONFIG_PATH, 'utf8');
-    const parsed = JSON.parse(data);
-    if (Array.isArray(parsed)) return res.json(parsed);
+    const data = await db.get(DB_KEY);
+    if (Array.isArray(data)) return res.json(data);
   } catch (e) {}
   res.json(DEFAULT_COMPANIES);
 });
 
-app.post('/api/config', (req, res) => {
+app.post('/api/config', async (req, res) => {
   const companies = req.body;
   if (!Array.isArray(companies)) return res.status(400).json({ error: 'Expected array' });
   try {
-    const dir = path.dirname(CONFIG_PATH);
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(companies, null, 2));
+    await db.set(DB_KEY, companies);
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
