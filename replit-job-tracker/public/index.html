@@ -312,13 +312,26 @@ async function runSearch() {
   let completed = 0;
   setStatus('<span class="spinner"></span> Searching ' + selected.length + ' companies one at a time to stay within API limits...');
 
+  const CACHE_TTL = 12 * 60 * 60 * 1000;
+  const cacheKey = kw => 'jobCache_' + kw.toLowerCase().replace(/\s+/g,'_');
+  const kwKey = cacheKey(keywords + '|' + location);
+
   for (let i = 0; i < selected.length; i++) {
     const company = selected[i];
+    const cached = (() => { try { const c = JSON.parse(localStorage.getItem(kwKey + '_' + company.name)); return c && (Date.now() - c.ts < CACHE_TTL) ? c.jobs : null; } catch { return null; } })();
+    if (cached) {
+      setStatus('<span class="spinner"></span> ' + (completed + 1) + ' / ' + selected.length + ' — ' + company.name + ' (cached)');
+      allResults.push({ company: company.name, jobs: cached, error: null, cached: true });
+      completed++;
+      renderResults(allResults);
+      continue;
+    }
     setStatus('<span class="spinner"></span> ' + (completed + 1) + ' / ' + selected.length + ' — searching ' + company.name + '...');
     try {
       const rawJobs = await searchWithRetry(company, keywords, location);
       setStatus('<span class="spinner"></span> ' + (completed + 1) + ' / ' + selected.length + ' — validating ' + rawJobs.length + ' listings for ' + company.name + '...');
       const jobs = await validateJobs(rawJobs);
+      localStorage.setItem(kwKey + '_' + company.name, JSON.stringify({ ts: Date.now(), jobs }));
       allResults.push({ company: company.name, jobs, error: null });
     } catch (err) {
       allResults.push({ company: company.name, jobs: [], error: err.message });
@@ -352,7 +365,6 @@ Return ONLY a JSON array. No preamble, no markdown, no backticks. Each element:
   "title": "Job title",
   "location": "Location or Remote",
   "url": "Direct URL to the job listing, or careers page if no direct link available",
-  "snippet": "1-2 sentence description of the role",
   "matched_keyword": "which keyword matched",
   "days_ago": 5
 }
@@ -410,10 +422,9 @@ function renderResults(allResults) {
           ${daysAgoBadge(job.days_ago)}
           ${job.matched_keyword ? `<span style="font-size:11px;color:#aaa;">matched: ${job.matched_keyword}</span>` : ''}
         </div>
-        ${job.snippet ? `<div class="job-snippet">${job.snippet}</div>` : ''}
       </div>`).join('');
     return `<div class="company-section">
-      <h3>${r.company} <span class="count-badge">${jobs.length} match${jobs.length !== 1 ? 'es' : ''}</span></h3>
+      <h3>${r.company} <span class="count-badge">${jobs.length} match${jobs.length !== 1 ? 'es' : ''}</span>${r.cached ? ' <span class="count-badge" style="color:#aaa;">cached</span>' : ''}</h3>
       ${jobsHtml}
     </div>`;
   }).join('');
