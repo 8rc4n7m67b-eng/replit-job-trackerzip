@@ -2,3 +2,7 @@ run = "npm install && node index.js"
 
 [nix]
 channel = "stable-22_11"
+
+[deployment]
+run = ["sh", "-c", "npm install && node index.js"]
+deploymentTarget = "cloudrun"
