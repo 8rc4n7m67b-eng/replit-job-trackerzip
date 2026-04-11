@@ -151,6 +151,7 @@ const COMPANY_DATA = [
 const GROUP_LABELS = { original: "Original targets", platforms: "Mental health platforms", ehr: "EHR / practice management" };
 
 function saveCompanies() {
+  localStorage.setItem('jobTrackerCompanies', JSON.stringify(companies));
   fetch('/api/config', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -159,6 +160,8 @@ function saveCompanies() {
 }
 
 async function loadCompanies() {
+  const saved = localStorage.getItem('jobTrackerCompanies');
+  if (saved) { try { const p = JSON.parse(saved); if (Array.isArray(p) && p.length) return p; } catch (e) {} }
   try {
     const resp = await fetch('/api/config');
     if (resp.ok) {
@@ -325,7 +328,7 @@ async function runSearch() {
     if (i < selected.length - 1) await new Promise(r => setTimeout(r, 7000));
   }
 
-  const total = allResults.reduce((s, r) => s + r.jobs.length, 0);
+  const total = renderResults(allResults);
   setStatus('Done. Found ' + total + ' matching job' + (total !== 1 ? 's' : '') + ' across ' + selected.length + ' companies.');
   btn.disabled = false;
   btn.textContent = 'Search jobs';
@@ -392,9 +395,11 @@ days_ago must be an integer (number of days since posted) or null if unknown. Ma
 function renderResults(allResults) {
   const container = document.getElementById('resultsContainer');
   const sorted = [...allResults].sort((a,b) => b.jobs.length - a.jobs.length);
+  let totalRendered = 0;
   container.innerHTML = sorted.map(r => {
     if (r.error) return `<div class="company-section"><h3>${r.company} <span class="count-badge">error</span></h3><div class="error-msg">${r.error}</div></div>`;
     const jobs = (r.jobs || []).filter(job => job.days_ago === null || job.days_ago === undefined || parseInt(job.days_ago) <= 21);
+    totalRendered += jobs.length;
     if (!jobs.length) return '';
     const jobsHtml = jobs.map(job => `
       <div class="job-card">
@@ -412,6 +417,7 @@ function renderResults(allResults) {
       ${jobsHtml}
     </div>`;
   }).join('');
+  return totalRendered;
 }
 
 function setStatus(html) { document.getElementById('statusBar').innerHTML = html; }
